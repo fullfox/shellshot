@@ -68,3 +68,5 @@ options:
   --hex                 With --list specified, print in hexadecimal (For debug
                         purpose)
 ```
+
+If you find any bug, please create an issue.

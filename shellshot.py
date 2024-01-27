@@ -6,15 +6,22 @@ from rich.terminal_theme import TerminalTheme
 
 LIBRSVG2 = True # Set to false to use cairosvg instead for png rendering. Requires `pip install cairosvg`.
 
-chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1c', '\x1d', '\x1e', '\x1f']
+# Prompt
+PROMPT = "\033[1m\033[95mconsultant$\033[39m "
 
 # Console theme
 theme = ["282c34", "3f4451", "4f5666", "545862", "9196a1", "abb2bf", "e6e6e6", "ffffff", "e05561", "d18f52", "e6b965", "8cc265", "42b3c2", "4aa5f0", "c162de", "bf4034", "21252b", "181a1f", "ff616e", "f0a45d", "a5e075", "4cd1e0", "4dc4ff", "de73ff"]
 
 
+banned_output = ["", "\n", "\n\x1b[J"]
+banned_sequence = []
 def extract_cmd_outputs(input_data):
     # Split different commands based on OSC SEQUENCE
-    outputs = re.split(r'(?:\x1b\]\d+;[^\x07]*\x07)+', input_data)
+    outputs = re.split(r'(?:\x1b\]\d+;(?!donotcapture)[^\x07]*\x07)+', input_data)
+
+    # Remove outputs that contains a banned sequence
+    for seq in banned_sequence:
+        outputs = [output for output in outputs if not seq in output]
 
     # Remove ASCII non printable characters
     outputs = [ANSI_clean(output) for output in outputs]
@@ -26,10 +33,12 @@ def extract_cmd_outputs(input_data):
         del outputs[-1]
 
     # Remove empty outputs
-    outputs = [output for output in outputs if output != ""]
+    outputs = [output for output in outputs if not output in banned_output]
     return outputs
 
+chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1c', '\x1d', '\x1e', '\x1f']
 
+flagbypass = False
 def ANSI_clean(input_data):
     result = input_data
 
@@ -44,16 +53,15 @@ def ANSI_clean(input_data):
         result = result.replace(char, '')
 
     # Handle orphan \r
-    result = '\n'.join(line.split('\r')[-1] for line in result.split('\n'))
+    result = '\n'.join(line.split('\r')[-1].rstrip() for line in result.split('\n'))
 
-    return result.rstrip()
+    return result
 
 
-def ANTI_to_svg(ansiText, title):
-    width = min(max([len(get_printable(line.rstrip())) for line in ansiText.split('\n')]), 120)
-
-    console = Console(width=width, record=True, file=io.StringIO())
+def ANSI_to_svg(ansiText, title):
     richText = text.Text.from_ansi(ansiText)
+    width = max([len(l.rstrip()) for l in str(richText).split('\n')])+5
+    console = Console(record=True, file=io.StringIO(), width=width)
     console.print(richText)
     console.height = len(richText.wrap(console, width=width))
     SVG_FORMAT = CONSOLE_SVG_FORMAT.replace("<svg","<svg xml:space=\"preserve\"")
@@ -76,9 +84,6 @@ def remove_footer(input_data):
     return input_data
 
 # Misc functions
-def get_printable(input_str):
-    return ''.join(char for char in input_str if char in string.printable)
-
 def _hexToRGB(colourCode: str) -> tuple[int, int, int]:
 	return tuple(int(colourCode[i : i + 2], base=16) for i in (0, 2, 4))
 
@@ -89,17 +94,26 @@ terminalTheme = TerminalTheme(
 )
 
 def main():
+    # Do not capture flag
+    print("\033]2;donotcapture\a",end="")
+
     # Parsing CLI
     parser = argparse.ArgumentParser(description='Parse and export ANSI typescript to svg/png')
     parser.add_argument('typescript', help='Input file path')
     parser.add_argument('-o', '--output', help='Output image path (default: screenshot.png)', default='screenshot.png')
     parser.add_argument('-c', '--command', type=int, help='Number of command output to process, starting from the end (default: 1)', default=1)
+    parser.add_argument('-p', '--prompt', help='Command to display in the prompt')
     parser.add_argument('-t', '--title', help='Window title rendered in the screenshot (default: Terminal)',default='Terminal')
     parser.add_argument('--png', action='store_true', help='Render the screenshot in PNG instead of SVG')
     parser.add_argument('-s', '--scale', type=int, help='Scale of rendered PNGs (default: 2)', default=2)
     parser.add_argument('--list', action='store_true', help='Print all the available outputs and exit')
     parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (For debug purpose)', default=False)
+    parser.add_argument('--flagbypass', action='store_true', help='Ignore the \'donotcapture\' flag. (To capture shellshot itself)')
+    parser.add_argument('--open', action='store_true', help='Open the screenshot once rendered')
     args = parser.parse_args()
+
+    if not args.flagbypass:
+        banned_sequence.append("\x1b]2;donotcapture\a")
 
     # Open typescript
     try:
@@ -128,10 +142,15 @@ def main():
             print("")
         exit(1)
 
+    # Extract command
     output = outputs[-int(args.command)]
 
+    # Append prompt
+    if args.prompt:
+        output = f"{PROMPT}{args.prompt}\n" + output
+
     # Export to image
-    output_svg = ANTI_to_svg(output, args.title)
+    output_svg = ANSI_to_svg(output, args.title)
     if args.png:
         if LIBRSVG2:
             try:
@@ -145,6 +164,8 @@ def main():
         with open(args.output, "w") as file:
             file.write(output_svg)
     print("Shellshot saved at", args.output)
+    if args.open:
+        subprocess.run(f"open \"{args.output}\"", shell=True)
 
 if __name__ == '__main__':
     main()
