@@ -90,6 +90,7 @@ def main():
     parser.add_argument('--png', action='store_true', help='Render the screenshot in PNG instead of SVG')
     parser.add_argument('-s', '--scale', type=int, help='Scale of rendered PNGs (default: 2)', default=2)
     parser.add_argument('--list', action='store_true', help='Print all the available outputs and exit')
+    parser.add_argument('--print', action='store_true', help='Print the nth output and exit')
     parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (For debug purpose)', default=False)
     parser.add_argument('--flagbypass', action='store_true', help='Ignore the \'donotcapture\' flag. (To capture shellshot itself)')
     parser.add_argument('--open', action='store_true', help='Open the screenshot once rendered')
@@ -131,6 +132,11 @@ def main():
     # Append prompt
     if args.prompt:
         output = f"{PROMPT}{args.prompt}\n" + output
+
+    if args.print:
+        sys.stdout.write(output)
+        sys.stdout.flush()
+        exit(0)
 
     # Export to image
     output_svg = ANSI_to_svg(output, args.title)
