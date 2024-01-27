@@ -14,12 +14,15 @@ The tool requires librsvg2-bin. Install it with
 sudo apt install librsvg2-bin
 ```
 ### Installation
-Move `shellshot.py` in the $PATH and append
+1. Make `shellshot.py` reachable from the $PATH and make it executable
+```bash
+chmod +x shellshot.py
+```
 
+3. Append this to your `~/.zshrc` config file
 ```
 source /path/to/shellshot.sh
 ```
-to your `~/.zshrc` config file.
 
 ## How to use
 While in terminal, run the command of your choice, then run `shot`. A screenshot of the previous command output is saved in your `~/Pictures/shellshot/` directory (configure the directory in `shellshot.sh`).
