@@ -33,7 +33,7 @@ Shellshot saved at ~/Pictures/shellshot/shellshot 2024-01-01 00:00:00.png
 
 The rendered png:
 
-![shellshot 2024-01-27 11:29:10 | ee](https://github.com/fullfox/shellshot/assets/31577231/4af2a590-1be5-46c8-be35-1f23e704d243)
+![shellshot 2024-01-27 14:00:12](https://github.com/fullfox/shellshot/assets/31577231/982d125e-9e01-4755-a7ed-4835322aec78)
 
 If you want to disable automatic outputs recording for security purpose, you can do so by commenting the corresponding line in `shellshot.sh`.
 To start recording while in CLI, simply type `record`. Exit the terminal to stop recording outputs.
@@ -42,8 +42,9 @@ You can also directly use the `shellshot.py` script which offers many options (s
 
 ```
 $ shellshot.py -h
-usage: shellshot.py [-h] [-o OUTPUT] [-c COMMAND] [-t TITLE] [--png]
-                    [-s SCALE] [--list] [--hex]
+usage: shellshot.py [-h] [-o OUTPUT] [-c COMMAND] [-p PROMPT] [-t TITLE]
+                    [--png] [-s SCALE] [--list] [--hex] [--flagbypass]
+                    [--open]
                     typescript
 
 Parse and export ANSI typescript to svg/png
@@ -58,6 +59,8 @@ options:
   -c COMMAND, --command COMMAND
                         Number of command output to process, starting from the
                         end (default: 1)
+  -p PROMPT, --prompt PROMPT
+                        Command to display in the prompt
   -t TITLE, --title TITLE
                         Window title rendered in the screenshot (default:
                         Terminal)
@@ -67,6 +70,9 @@ options:
   --list                Print all the available outputs and exit
   --hex                 With --list specified, print in hexadecimal (For debug
                         purpose)
+  --flagbypass          Ignore the 'donotcapture' flag. (To capture shellshot
+                        itself)
+  --open                Open the screenshot once rendered
 ```
 
 If you find any bug, please create an issue.
