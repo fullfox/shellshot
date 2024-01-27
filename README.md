@@ -1,6 +1,6 @@
 # 📷 ShellShot
 
-Generate **screenshots** of **previous commands output**, purely from **commandline** (only in zsh for now).
+Generate **screenshots** of **previous commands output**, purely from **commandline** (wrapper only available for zsh for now).
 
 **Shellshot** is a tool made out of two scripts:
 - `shellshot.sh`, a wrapper for `shellshot.py` which capture terminal output using the [linux *`script`* command](https://man7.org/linux/man-pages/man1/script.1.html).
