@@ -19,7 +19,7 @@ sudo apt install librsvg2-bin
 chmod +x shellshot.py
 ```
 
-3. Append this to your `~/.zshrc` config file
+2. Append this to your `~/.zshrc` config file
 ```
 source /path/to/shellshot.sh
 ```
