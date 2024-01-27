@@ -6,7 +6,7 @@ from rich.terminal_theme import TerminalTheme
 
 LIBRSVG2 = True # Set to false to use cairosvg instead for png rendering. Requires `pip install cairosvg`.
 
-# Prompt
+# Prompt, configure your PS1 here
 PROMPT = "\033[1m\033[95mconsultant$\033[39m "
 
 # Console theme
@@ -38,7 +38,6 @@ def extract_cmd_outputs(input_data):
 
 chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1c', '\x1d', '\x1e', '\x1f']
 
-flagbypass = False
 def ANSI_clean(input_data):
     result = input_data
 
