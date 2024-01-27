@@ -67,22 +67,6 @@ def ANSI_to_svg(ansiText, title):
     SVG_FORMAT = CONSOLE_SVG_FORMAT.replace("<svg","<svg xml:space=\"preserve\"")
     return console.export_svg(title=title, theme=terminalTheme, code_format=SVG_FORMAT)
 
-
-
-def remove_header(input_data):
-    if input_data.count('\n') == 0:
-        return input_data
-    header, body = input_data.split('\n', 1)
-    if header.startswith("Script started"):
-        return body
-    return input_data
-
-def remove_footer(input_data):
-    body, footer = input_data.rsplit('\n', 1)
-    if footer.startswith("Script done"):
-        return body
-    return input_data
-
 # Misc functions
 def _hexToRGB(colourCode: str) -> tuple[int, int, int]:
 	return tuple(int(colourCode[i : i + 2], base=16) for i in (0, 2, 4))
