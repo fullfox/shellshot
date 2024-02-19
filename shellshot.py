@@ -165,7 +165,7 @@ def main():
     if output_file is not None:
         print("Shellshot saved at", output_file)
         if args.open:
-            subprocess.run(f"open \"{args.output}\"", shell=True)
+            subprocess.run(f"open \"{output_file}\"", shell=True)
 
 if __name__ == '__main__':
     main()
