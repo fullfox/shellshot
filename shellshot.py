@@ -11,7 +11,7 @@ PROMPT = "\033[1m\033[95mconsultant$\033[39m "
 
 # Console theme
 theme = ["282c34", "3f4451", "4f5666", "545862", "9196a1", "abb2bf", "e6e6e6", "ffffff", "e05561", "d18f52", "e6b965", "8cc265", "42b3c2", "4aa5f0", "c162de", "bf4034", "21252b", "181a1f", "ff616e", "f0a45d", "a5e075", "4cd1e0", "4dc4ff", "de73ff"]
-
+MAX_WIDTH = 200
 
 banned_output = ["", "\n", "\n\x1b[J"]
 banned_sequence = []
@@ -60,6 +60,7 @@ def ANSI_clean(input_data):
 def ANSI_to_svg(ansiText, title):
     richText = text.Text.from_ansi(ansiText)
     width = max([len(l.rstrip()) for l in str(richText).split('\n')])+5
+    width = min(width, MAX_WIDTH)
     console = Console(record=True, file=io.StringIO(), width=width)
     console.print(richText)
     console.height = len(richText.wrap(console, width=width))
@@ -140,21 +141,31 @@ def main():
 
     # Export to image
     output_svg = ANSI_to_svg(output, args.title)
+    svg_fallback = False
+    output_file = None
     if args.png:
-        if LIBRSVG2:
-            try:
-                subprocess.run(f"rsvg-convert -o \"{args.output}\" -z {args.scale}", input=output_svg, check=True, shell=True, text=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Error: {e}")
-        else: # SVG to PNG conversion using cairosvg, if librsvg2-bin not available
-            import cairosvg
-            cairosvg.svg2png(bytestring=output_svg, write_to=args.output)
-    else:
-        with open(args.output, "w") as file:
+        try:
+            f = f"{args.output}.png"
+            if LIBRSVG2:
+                    subprocess.run(f"rsvg-convert -o \"{f}\" -z {args.scale}", input=output_svg, check=True, shell=True, text=True)
+            else: # SVG to PNG conversion using cairosvg, if librsvg2-bin not available
+                import cairosvg
+                cairosvg.svg2png(bytestring=output_svg, write_to=f)
+            output_file = f
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+            svg_fallback = True
+
+    if not args.png or svg_fallback:
+        f = args.output + ".svg"
+        with open(f, "w") as file:
+            output_file = f
             file.write(output_svg)
-    print("Shellshot saved at", args.output)
-    if args.open:
-        subprocess.run(f"open \"{args.output}\"", shell=True)
+
+    if output_file is not None:
+        print("Shellshot saved at", output_file)
+        if args.open:
+            subprocess.run(f"open \"{args.output}\"", shell=True)
 
 if __name__ == '__main__':
     main()
