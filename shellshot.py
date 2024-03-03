@@ -17,7 +17,8 @@ banned_output = ["", "\n", "\n\x1b[J"]
 banned_sequence = []
 def extract_cmd_outputs(input_data):
     # Split different commands based on OSC SEQUENCE
-    outputs = re.split(r'(?:\x1b\]\d+;(?!donotcapture)[^\x07]*\x07)+', input_data)
+    outputs = re.split(r'\x1b\]suffix\x07(?:.*?)\x1b\]prefix\x07', input_data, flags=re.MULTILINE | re.DOTALL)
+    outputs = outputs[1:-1]
 
     # Remove outputs that contains a banned sequence
     for seq in banned_sequence:
@@ -40,6 +41,9 @@ chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07
 
 def ANSI_clean(input_data):
     result = input_data
+
+    # Remove OSC sequence
+    result = re.sub(r'\x1b\](?:.*?)\x07', '', result).strip()
 
     # Remove ZSH ending '%'
     result = result.replace("\x1B[1m\x1B[7m%\x1B[27m\x1B[1m\x1B[0m", '')

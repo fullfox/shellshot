@@ -1,10 +1,24 @@
+add_prefix() {
+    echo -en "\033]prefix\007"
+}
+
+precmd() {
+    echo -en "\033]suffix\007"
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec add_prefix
+
 # Saving entered commands
 LCMD=""
 CCMD=""
-preexec () {
+logcmd () {
   LCMD=$CCMD
   CCMD=$1
 }
+
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec logcmd
 
 record(){
   if [[ -z $SCRIPT ]];then
