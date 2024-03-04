@@ -82,7 +82,11 @@ terminalTheme = TerminalTheme(
 )
 
 def copy_image_to_clipboard(image_path):
-    subprocess.run(["xclip", "-selection", "clipboard", "-t", "image/png", "-i", image_path])
+    try:
+        subprocess.run(["xclip", "-selection", "clipboard", "-t", "image/png", "-i", image_path])
+        print("Shellshot copied to clipboard.")
+    except:
+        print("Copying to clipboard failed, check if xclip is installed.")
 
 def main():
     # Do not capture flag
@@ -102,7 +106,7 @@ def main():
     parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (For debug purpose)', default=False)
     parser.add_argument('--flagbypass', action='store_true', help='Ignore the \'donotcapture\' flag. (To capture shellshot itself)')
     parser.add_argument('--open', action='store_true', help='Open the screenshot once rendered')
-    parser.add_argument('--cb', action='store_true', help='Copy the screenshot in the clipboard', required=False)
+    parser.add_argument('--clipboard', action='store_true', help='Copy the screenshot in the clipboard', required=False)
     args = parser.parse_args()
 
     if not args.flagbypass:
@@ -174,8 +178,7 @@ def main():
         print("Shellshot saved at", output_file)
         if args.open:
             subprocess.run(f"open \"{output_file}\"", shell=True)
-        if args.cb:
-            print("Shellshot file copied in clipboard.")
+        if args.clipboard:
             copy_image_to_clipboard(output_file)
             
 
