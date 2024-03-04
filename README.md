@@ -19,9 +19,9 @@ The clipboard feature requires xclip. Install it with:
 sudo apt install xclip
 ```
 
-Then ensure adding `--cb` to the alias in the `.sh` wrapper file (line 43) to enable the clipboard feature.
+Then ensure adding `--clipboard` to the alias in the `.sh` wrapper file (line 43) to enable the clipboard feature.
 ```
-alias shot='shellshot.py "$SCRIPT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot $(date +"%Y-%m-%d %H:%M:%S")" --png --open --cb'
+alias shot='shellshot.py "$SCRIPT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot $(date +"%Y-%m-%d %H:%M:%S")" --png --open --clipboard'
 ```
 
 ### Installation
