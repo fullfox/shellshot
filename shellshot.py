@@ -43,7 +43,7 @@ def ANSI_clean(input_data):
     result = input_data
 
     # Remove OSC sequence
-    result = re.sub(r'\x1b\](?:.*?)\x07', '', result).strip()
+    result = re.sub(r'\x1b\](?:.*?)\x07', '', result).rstrip()
 
     # Remove ZSH ending '%'
     result = result.replace("\x1B[1m\x1B[7m%\x1B[27m\x1B[1m\x1B[0m", '')
