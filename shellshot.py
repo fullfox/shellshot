@@ -73,13 +73,16 @@ def ANSI_to_svg(ansiText, title):
 
 # Misc functions
 def _hexToRGB(colourCode: str) -> tuple[int, int, int]:
-	return tuple(int(colourCode[i : i + 2], base=16) for i in (0, 2, 4))
+    return tuple(int(colourCode[i : i + 2], base=16) for i in (0, 2, 4))
 
 terminalTheme = TerminalTheme(
-	background=_hexToRGB(theme[0]), foreground=_hexToRGB(theme[5]),
-	normal=[_hexToRGB(theme[n]) for n in [1, 8, 11, 9, 13, 14, 12, 6]],
-	bright=[_hexToRGB(theme[n]) for n in [2, 18, 20, 19, 22, 23, 21, 7]],
+    background=_hexToRGB(theme[0]), foreground=_hexToRGB(theme[5]),
+    normal=[_hexToRGB(theme[n]) for n in [1, 8, 11, 9, 13, 14, 12, 6]],
+    bright=[_hexToRGB(theme[n]) for n in [2, 18, 20, 19, 22, 23, 21, 7]],
 )
+
+def copy_image_to_clipboard(image_path):
+    subprocess.run(["xclip", "-selection", "clipboard", "-t", "image/png", "-i", image_path])
 
 def main():
     # Do not capture flag
@@ -99,6 +102,7 @@ def main():
     parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (For debug purpose)', default=False)
     parser.add_argument('--flagbypass', action='store_true', help='Ignore the \'donotcapture\' flag. (To capture shellshot itself)')
     parser.add_argument('--open', action='store_true', help='Open the screenshot once rendered')
+    parser.add_argument('--cb', action='store_true', help='Copy the screenshot in the clipboard', required=False)
     args = parser.parse_args()
 
     if not args.flagbypass:
@@ -170,6 +174,10 @@ def main():
         print("Shellshot saved at", output_file)
         if args.open:
             subprocess.run(f"open \"{output_file}\"", shell=True)
+        if args.cb:
+            print("Shellshot file copied in clipboard.")
+            copy_image_to_clipboard(output_file)
+            
 
 if __name__ == '__main__':
     main()

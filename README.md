@@ -9,10 +9,21 @@ Generate **screenshots** of **previous commands output**, purely from **commandl
 ## How to install
 ### Requirements
 
-The tool requires librsvg2-bin. Install it with
+The tool requires librsvg2-bin. Install it with:
 ```
 sudo apt install librsvg2-bin
 ```
+
+The clipboard feature requires xclip. Install it with:
+```
+sudo apt install xclip
+```
+
+Then ensure adding `--cb` to the alias in the `.sh` wrapper file (line 43) to enable the clipboard feature.
+```
+alias shot='shellshot.py "$SCRIPT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot $(date +"%Y-%m-%d %H:%M:%S")" --png --open --cb'
+```
+
 ### Installation
 1. Make `shellshot.py` reachable from the $PATH and make it executable
 ```bash
