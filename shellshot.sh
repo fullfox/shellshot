@@ -40,7 +40,7 @@ if [[ -n $SCRIPT ]];then
   SHELLSHOT_EXPORT_DIR="$(xdg-user-dir PICTURES)/shellshot"
 
   mkdir -p $SHELLSHOT_EXPORT_DIR
-  alias shot='shellshot.py "$SCRIPT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot $(date +"%Y-%m-%d %H:%M:%S")" --png --open'
+  alias shot='shellshot.py "$SCRIPT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot $(date +"%Y-%m-%d %H:%M:%S")" --png --open --cb'
 
 fi
 
