@@ -7,7 +7,7 @@ from rich.terminal_theme import TerminalTheme
 LIBRSVG2 = True # Set to false to use cairosvg instead for png rendering. Requires `pip install cairosvg`.
 
 # Prompt, configure your PS1 here
-PROMPT = "\033[1m\033[95mconsultant$\033[39m "
+PROMPT = "\033[1m\033[95mconsultant$ \033[0m"
 
 # Console theme
 theme = ["282c34", "3f4451", "4f5666", "545862", "9196a1", "abb2bf", "e6e6e6", "ffffff", "e05561", "d18f52", "e6b965", "8cc265", "42b3c2", "4aa5f0", "c162de", "bf4034", "21252b", "181a1f", "ff616e", "f0a45d", "a5e075", "4cd1e0", "4dc4ff", "de73ff"]
