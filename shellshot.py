@@ -56,7 +56,7 @@ def ANSI_clean(input_data):
         result = result.replace(char, '')
 
     # Handle orphan \r
-    result = '\n'.join(line.split('\r')[-1].rstrip() for line in result.split('\n'))
+    result = '\n'.join(line.rstrip().split('\r')[-1].rstrip() for line in result.split('\n'))
 
     return result
 
