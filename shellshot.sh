@@ -48,7 +48,7 @@ if [[ -n $SHELLSHOT ]];then
   SHELLSHOT_EXPORT_DIR="$(xdg-user-dir PICTURES)/shellshot"
 
   mkdir -p $SHELLSHOT_EXPORT_DIR
-  alias shot='shellshot.py "$SHELLSHOT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot" --png --open --clipboard'
+  alias shot='shellshot.py "$SHELLSHOT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/$LCMD" --png --open --clipboard'
 
 fi
 
