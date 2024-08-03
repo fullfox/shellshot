@@ -17,7 +17,8 @@ banned_output = ["", "\n", "\n\x1b[J"]
 banned_sequence = []
 def extract_cmd_outputs(input_data):
     # Split different commands based on OSC SEQUENCE
-    outputs = re.split(r'\x1b\]suffix\x07(?:.*?)\x1b\]prefix\x07', input_data, flags=re.MULTILINE | re.DOTALL)
+    pattern = r'\x1b\]prefix\x07(.*?)\x1b\]suffix\x07'
+    outputs = re.findall(pattern, input_data, flags=re.MULTILINE | re.DOTALL)
 
     # Remove outputs that contains a banned sequence
     for seq in banned_sequence:
@@ -70,10 +71,9 @@ def ANSI_to_svg(ansiText, title):
     result = console.export_svg(title=title, theme=terminalTheme, code_format=SVG_FORMAT)
 
     # Remove non printable chars from the list ( often not necessary )
-    """
     for char in chars_to_remove:
         result = result.replace(char, '')
-    """
+
     return result
 
 # Misc functions
