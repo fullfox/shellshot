@@ -2,12 +2,13 @@ add_prefix() {
     echo -en "\033]prefix\007"
 }
 
-precmd() {
+add_suffix() {
     echo -en "\033]suffix\007"
 }
 
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec add_prefix
+add-zsh-hook precmd add_suffix
 
 # Saving entered commands
 LCMD=""
@@ -21,26 +22,33 @@ autoload -Uz add-zsh-hook
 add-zsh-hook preexec logcmd
 
 record(){
-  if [[ -z $SCRIPT ]];then
+  if [[ -z $SHELLSHOT ]];then
     dir="$HOME/.shellshot"
     mkdir -p $dir
     file="$dir/$(uuidgen)"
-    SCRIPT=$file exec script -qf $file
+    SHELLSHOT=$file exec script -qf $file
+    echo "test" > $SHELLSHOT
   fi
 }
 
-if [[ -n $SCRIPT ]];then
+if [[ -n $SHELLSHOT ]];then
+  
+  # Unexport $SHELLSHOT to prevent children for inheriting
+  local file=$SHELLSHOT
+  unset SHELLSHOT
+  SHELLSHOT=$file
+  
   echo "recording..."
 
   zshexit(){
-    rm $SCRIPT
+    rm $SHELLSHOT
   }
 
   # Path to save .svg and .png shellshots at:
   SHELLSHOT_EXPORT_DIR="$(xdg-user-dir PICTURES)/shellshot"
 
   mkdir -p $SHELLSHOT_EXPORT_DIR
-  alias shot='shellshot.py "$SCRIPT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot $(date +"%Y-%m-%d %H:%M:%S")" --png --open --clipboard'
+  alias shot='shellshot.py "$SHELLSHOT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/shellshot" --png --open --clipboard'
 
 fi
 

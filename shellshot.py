@@ -18,7 +18,6 @@ banned_sequence = []
 def extract_cmd_outputs(input_data):
     # Split different commands based on OSC SEQUENCE
     outputs = re.split(r'\x1b\]suffix\x07(?:.*?)\x1b\]prefix\x07', input_data, flags=re.MULTILINE | re.DOTALL)
-    outputs = outputs[1:-1]
 
     # Remove outputs that contains a banned sequence
     for seq in banned_sequence:
@@ -37,13 +36,13 @@ def extract_cmd_outputs(input_data):
     outputs = [output for output in outputs if not output in banned_output]
     return outputs
 
-chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1c', '\x1d', '\x1e', '\x1f']
+chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e', '\x1f']
 
 def ANSI_clean(input_data):
     result = input_data
 
     # Remove OSC sequence
-    result = re.sub(r'\x1b\](?:.*?)\x07', '', result).rstrip()
+    result = re.sub(r'(\x9d|\x1b)(?!\[)(.)(?:.*?)(\x07|\x9c)', '', result).rstrip()
 
     # Remove ZSH ending '%'
     result = result.replace("\x1B[1m\x1B[7m%\x1B[27m\x1B[1m\x1B[0m", '')
@@ -51,12 +50,11 @@ def ANSI_clean(input_data):
     # Convert CRLF to LF
     result = result.replace("\r\n", "\n")
 
-    # Remove non printable chars from the list
-    for char in chars_to_remove:
-        result = result.replace(char, '')
-
     # Handle orphan \r
     result = '\n'.join(line.rstrip().split('\r')[-1].rstrip() for line in result.split('\n'))
+
+    # Remove command return \n
+    result = result.rsplit('\n', 1)[0]
 
     return result
 
@@ -69,7 +67,14 @@ def ANSI_to_svg(ansiText, title):
     console.print(richText)
     console.height = len(richText.wrap(console, width=width))
     SVG_FORMAT = CONSOLE_SVG_FORMAT.replace("<svg","<svg xml:space=\"preserve\"")
-    return console.export_svg(title=title, theme=terminalTheme, code_format=SVG_FORMAT)
+    result = console.export_svg(title=title, theme=terminalTheme, code_format=SVG_FORMAT)
+
+    # Remove non printable chars from the list ( often not necessary )
+    """
+    for char in chars_to_remove:
+        result = result.replace(char, '')
+    """
+    return result
 
 # Misc functions
 def _hexToRGB(colourCode: str) -> tuple[int, int, int]:
