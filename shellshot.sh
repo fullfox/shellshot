@@ -10,24 +10,12 @@ autoload -Uz add-zsh-hook
 add-zsh-hook preexec add_prefix
 add-zsh-hook precmd add_suffix
 
-# Saving entered commands
-LCMD=""
-CCMD=""
-logcmd () {
-  LCMD=$CCMD
-  CCMD=$1
-}
-
-autoload -Uz add-zsh-hook
-add-zsh-hook preexec logcmd
-
 record(){
   if [[ -z $SHELLSHOT ]];then
     dir="$HOME/.shellshot"
     mkdir -p $dir
     file="$dir/$(uuidgen)"
     SHELLSHOT=$file exec script -qf $file
-    echo "test" > $SHELLSHOT
   fi
 }
 
@@ -46,9 +34,18 @@ if [[ -n $SHELLSHOT ]];then
 
   # Path to save .svg and .png shellshots at:
   SHELLSHOT_EXPORT_DIR="$(xdg-user-dir PICTURES)/shellshot"
-
   mkdir -p $SHELLSHOT_EXPORT_DIR
-  alias shot='shellshot.py "$SHELLSHOT" -c 1 -p "$LCMD" -o "$SHELLSHOT_EXPORT_DIR/${LCMD//\//_}" --png --open --clipboard'
+
+  shot(){
+    CMDS=$(fc -lIn 0)
+    local sanitize() { echo "${1:0:20}" | tr -dc '[:alnum:] -'; }
+    local SANITIZED_FILENAME=$(sanitize "$(fc -lIn -1)")_$(date +%s) # to use the last ran command as filename
+    #local SANITIZED_FILENAME="shellshot $(date +"%Y-%m-%d %Hh%Mm%S")" # to use date as filename
+    if [ $# -eq 0 ]; then
+      local default=1
+    fi
+    shellshot.py "$SHELLSHOT" -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard $default $@
+  }
 
 fi
 

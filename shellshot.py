@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import re, sys, string, io, argparse, subprocess
+import re, sys, string, io, argparse, subprocess, urllib.parse
 from rich import text
 from rich.console import Console, CONSOLE_SVG_FORMAT
 from rich.terminal_theme import TerminalTheme
@@ -10,7 +10,7 @@ LIBRSVG2 = True # Set to false to use cairosvg instead for png rendering. Requir
 PROMPT = "\033[1m\033[95mconsultant$ \033[0m"
 
 # Console theme
-theme = ["282c34", "3f4451", "4f5666", "545862", "9196a1", "abb2bf", "e6e6e6", "ffffff", "e05561", "d18f52", "e6b965", "8cc265", "42b3c2", "4aa5f0", "c162de", "bf4034", "21252b", "181a1f", "ff616e", "f0a45d", "a5e075", "4cd1e0", "4dc4ff", "de73ff"]
+theme = ['282c34', 'abb2bf', '3f4451', '4f5666', 'e05561', 'ff616e', '8cc265', 'a5e075', 'd18f52', 'f0a45d', '4aa5f0', '4dc4ff', 'c162de', 'de73ff', '42b3c2', '4cd1e0', 'e6e6e6', 'ffffff']
 MAX_WIDTH = 200
 
 banned_output = ["", "\n", "\n\x1b[J"]
@@ -81,10 +81,12 @@ def _hexToRGB(colourCode: str) -> tuple[int, int, int]:
     return tuple(int(colourCode[i : i + 2], base=16) for i in (0, 2, 4))
 
 terminalTheme = TerminalTheme(
-    background=_hexToRGB(theme[0]), foreground=_hexToRGB(theme[5]),
-    normal=[_hexToRGB(theme[n]) for n in [1, 8, 11, 9, 13, 14, 12, 6]],
-    bright=[_hexToRGB(theme[n]) for n in [2, 18, 20, 19, 22, 23, 21, 7]],
+    background=_hexToRGB(theme[0]), foreground=_hexToRGB(theme[1]),
+    normal=[_hexToRGB(theme[n]) for n in [2, 4, 6, 8, 10, 12, 14, 16]],
+    bright=[_hexToRGB(theme[n]) for n in [3, 5, 7, 9, 11, 13, 15, 17]],
 )
+
+
 
 def copy_image_to_clipboard(image_path):
     try:
@@ -93,71 +95,109 @@ def copy_image_to_clipboard(image_path):
     except:
         print("Copying to clipboard failed, check if xclip is installed.")
 
+
+
+
 def main():
     # Do not capture flag
     print("\033]2;donotcapture\a",end="")
 
     # Parsing CLI
-    parser = argparse.ArgumentParser(description='Parse and export ANSI typescript to svg/png')
-    parser.add_argument('typescript', help='Input file path')
-    parser.add_argument('-o', '--output', help='Output image path (default: screenshot.png)', default='screenshot.png')
-    parser.add_argument('-c', '--command', type=int, help='Number of command output to process, starting from the end (default: 1)', default=1)
-    parser.add_argument('-p', '--prompt', help='Command to display in the prompt')
+    parser = argparse.ArgumentParser(description='Shellshot Version 1.2 - Parse and export ANSI typescript to svg/png. (https://github.com/fullfox/shellshot)')
+    parser.add_argument('typescript', help='Path to the ANSI typescript file')
+    parser.add_argument('offset', help='Number of command outputs to process from the end. Use !n to extract a single command. Use a:b to capture a specific range.')
+    parser.add_argument('-o', '--output', help='Path for the output image (default: screenshot.png)', default='screenshot.png')
+    parser.add_argument('-c', '--command', help='Command(s) matching stdout. Expected in `fc -lIn 0` format.')
     parser.add_argument('-t', '--title', help='Window title rendered in the screenshot (default: Terminal)',default='Terminal')
     parser.add_argument('--png', action='store_true', help='Render the screenshot in PNG instead of SVG')
     parser.add_argument('-s', '--scale', type=int, help='Scale of rendered PNGs (default: 2)', default=2)
     parser.add_argument('--list', action='store_true', help='Print all the available outputs and exit')
-    parser.add_argument('--print', action='store_true', help='Print the nth output and exit')
-    parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (For debug purpose)', default=False)
+    parser.add_argument('--print', action='store_true', help='Print the selected command(s) to console instead of rendering.')
+    parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (for debugging purpose)', default=False)
     parser.add_argument('--flagbypass', action='store_true', help='Ignore the \'donotcapture\' flag. (To capture shellshot itself)')
     parser.add_argument('--open', action='store_true', help='Open the screenshot once rendered')
-    parser.add_argument('--clipboard', action='store_true', help='Copy the screenshot in the clipboard', required=False)
+    parser.add_argument('--clipboard', action='store_true', help='Copy the screenshot to the clipboard using `xclip`', required=False)
     args = parser.parse_args()
+
+    # Parse range
+    # syntaxes  !3 -> get the third last command/output
+    #            3  -> get the three last commands/outputs
+    #           3:1 -> get the third and the second last commands/outputs
+    try:
+        if args.offset.startswith('!'):
+            extract_only_one = True
+            start_offset = int(args.offset[1:])
+        else:
+            extract_only_one = False
+            
+            if ':' in args.offset:
+                start_offset = int(args.offset.split(':')[0])
+                end_offset = int(args.offset.split(':')[1])
+            else:
+                start_offset = int(args.offset)
+                end_offset = 0
+    except:
+        print("Invalid offset")
+        exit(1)
 
     if not args.flagbypass:
         banned_sequence.append("\x1b]2;donotcapture\a")
 
     # Open typescript
     try:
-        with open(args.typescript, 'r', newline="") as file:
+        with open(args.typescript, 'r', encoding='utf-8', errors='ignore', newline="") as file:
             ANSIdata = file.read()
     except FileNotFoundError:
         print("Could not open file")
         exit(1)
 
+
     # Parse typescript
-    outputs = extract_cmd_outputs(ANSIdata)
-    if(int(args.command) > len(outputs)):
+    stdouts = extract_cmd_outputs(ANSIdata)
+    if(start_offset > len(stdouts)):
         print("Command's output not found: Out of range for the given typescript.")
         exit(1)
 
+
+    # Extract command input and output:
+    stdins = ['']*len(stdouts) + args.command.split('\n')
+    stdins = stdins[-len(stdouts):]
+    if extract_only_one:
+        selected_stdins = stdins[-int(start_offset)]
+        selected_stdouts = stdouts[-int(start_offset)]
+    else:
+        if end_offset == 0:
+            selected_stdins = stdins[-start_offset:]
+            selected_stdouts = stdouts[-start_offset:]
+        else:
+            selected_stdins = stdins[-start_offset:-end_offset]
+            selected_stdouts = stdouts[-start_offset:-end_offset]
+
+
+    # List all stdin / stdout for debug purpose when --list
     if args.list:
-        i = len(outputs)+1
-        for o in outputs:
-            i -= 1
+        for i in range(len(stdouts)):
+            print(f"Input {i}: {stdins[i]}")
             print(f"Output {i}:\n")
             if args.hex:
-                sys.stdout.write(o.encode().hex())
+                sys.stdout.write(stdouts[i].encode().hex())
             else:
-                indented = "\n".join(["    " + line for line in o.splitlines()])
+                indented = "\n".join(["    " + line for line in stdouts[i].splitlines()])
                 sys.stdout.write(indented)
             print("")
         exit(1)
 
-    # Extract command
-    output = outputs[-int(args.command)]
+    # Merge all ( prompts + stdins + stdouts ) into one final string
+    ANSI_result = '\n'.join([ f"{PROMPT}{selected_stdins[i]}\n" + selected_stdouts[i] for i in range(len(selected_stdouts))])
 
-    # Append prompt
-    if args.prompt:
-        output = f"{PROMPT}{args.prompt}\n" + output
-
+    # Print the concat stdout for debug purpose
     if args.print:
-        sys.stdout.write(output)
+        sys.stdout.write(ANSI_result)
         sys.stdout.flush()
         exit(0)
 
     # Export to image
-    output_svg = ANSI_to_svg(output, args.title)
+    output_svg = ANSI_to_svg(ANSI_result, args.title)
     svg_fallback = False
     output_file = None
     if args.png:
@@ -180,7 +220,7 @@ def main():
             file.write(output_svg)
 
     if output_file is not None:
-        print("Shellshot saved at", output_file)
+        print(f"Shellshot saved at file://{urllib.parse.quote(output_file)}")
         if args.open:
             subprocess.run(f"open \"{output_file}\"", shell=True)
         if args.clipboard:
