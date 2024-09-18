@@ -15,9 +15,12 @@ sudo apt install librsvg2-bin xclip uuid-runtime
 ```
 
 ### Installation
-1. Make `shellshot.py` reachable from the $PATH and make it executable
+1. Clone repo, make `shellshot.py` reachable from the $PATH and make it executable
 ```bash
+git clone git@github.com:fullfox/shellshot.git
+cd shellshot
 chmod +x shellshot.py
+sudo ln -s "$(pwd)/shellshot.py" /usr/local/bin/shellshot.py
 ```
 
 2. Append this to **the last line** of your `~/.zshrc` config file
