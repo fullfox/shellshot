@@ -49,9 +49,9 @@ Exit the terminal to stop recording outputs.
 
 `shellshot.py` offers many options to customize the prompt, the terminal window name, the range of commands to capture.
 
-Use `!n` to capture the output from the last nth command ran.
-Use `n` to capture the outputs from the last nth commands ran.
-Use `n:m` to capture the output(s) from the last nth to mth command(s) ran.
+Use `!n` to capture the output from the last nth command executed.
+Use `n` to capture the outputs from the last nth commands executed.
+Use `n:m` to capture the output(s) from the last nth to mth command(s) executed.
 
 Explore these options with the `--help` flag.
 
