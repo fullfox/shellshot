@@ -11,7 +11,7 @@ Generate **screenshots** of **commands output**, purely from **commandline** (on
 
 Install the requirements first with:
 ```
-sudo apt install librsvg2-bin xclip
+sudo apt install librsvg2-bin xclip uuid-runtime
 ```
 
 ### Installation
