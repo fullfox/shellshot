@@ -31,26 +31,33 @@ source /path/to/shellshot.sh
 That's it.
 
 ## How to use
-While in terminal, run the command of your choice, then run `shot`. A screenshot of the previous command output is saved in your `~/Pictures/shellshot/` directory (configure the directory in `shellshot.sh`).
+While in terminal, run the command of your choice, then run `shot`.
 
 ```bash
 $ echo -e "\033[1m\033[31mRED \033[32mGREEN \033[34mBLUE"
 RED GREEN BLUE
 $ shot
-Shellshot saved at ~/Pictures/shellshot/shellshot 2024-01-01 00:00:00.png
+Shellshot saved at ~/Pictures/shellshot/echo_1711711985.png
+Shellshot copied to clipboard.
 ```
 
 The rendered png:
 
 ![shellshot 2024-01-27 14:00:12](https://github.com/fullfox/shellshot/assets/31577231/982d125e-9e01-4755-a7ed-4835322aec78)
 
+The screenshot of the previous command output is saved in `~/Pictures/shellshot/` (set $SHELLSHOT_EXPORT_DIR to specify another directory).
+
+### Disable automatic recording
 If you want to disable automatic outputs recording for security purpose, you can do so by commenting the last line in `shellshot.sh`. Type `record` to temporary enable it again.
 Exit the terminal to stop recording outputs.
 
 `shellshot.py` offers many options to customize the prompt, the terminal window name, the range of commands to capture.
 
+### Syntax
 Use `!n` to capture the output from the last nth command executed.
+
 Use `n` to capture the outputs from the last nth commands executed.
+
 Use `n:m` to capture the output(s) from the last nth to mth command(s) executed.
 
 Explore these options with the `--help` flag.
