@@ -33,7 +33,7 @@ if [[ -n $SHELLSHOT ]];then
   }
 
   # Path to save .svg and .png shellshots at:
-  SHELLSHOT_EXPORT_DIR="$(xdg-user-dir PICTURES)/shellshot"
+  : ${SHELLSHOT_EXPORT_DIR:="$(xdg-user-dir PICTURES)/shellshot"} # Define SHELLSHOT_EXPORT_DIR as env var to override
   mkdir -p $SHELLSHOT_EXPORT_DIR
 
   shot(){
@@ -43,8 +43,10 @@ if [[ -n $SHELLSHOT ]];then
     #local SANITIZED_FILENAME="shellshot $(date +"%Y-%m-%d %Hh%Mm%S")" # to use date as filename
     if [ $# -eq 0 ]; then
       local default=1
+    else
+      local default=$@
     fi
-    shellshot.py "$SHELLSHOT" -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard $default $@
+    shellshot.py "$SHELLSHOT" $default -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard
   }
 
 fi

@@ -13,6 +13,7 @@ PROMPT = "\033[1m\033[95mconsultant$ \033[0m"
 theme = ['282c34', 'abb2bf', '3f4451', '4f5666', 'e05561', 'ff616e', '8cc265', 'a5e075', 'd18f52', 'f0a45d', '4aa5f0', '4dc4ff', 'c162de', 'de73ff', '42b3c2', '4cd1e0', 'e6e6e6', 'ffffff']
 MAX_WIDTH = 200
 
+
 banned_output = ["", "\n", "\n\x1b[J"]
 banned_sequence = []
 def extract_cmd_outputs(input_data):
@@ -37,8 +38,8 @@ def extract_cmd_outputs(input_data):
     outputs = [output for output in outputs if not output in banned_output]
     return outputs
 
-chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e', '\x1f']
 
+chars_to_remove = ['\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x0e', '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e', '\x1f']
 def ANSI_clean(input_data):
     result = input_data
 
@@ -76,6 +77,7 @@ def ANSI_to_svg(ansiText, title):
 
     return result
 
+
 # Misc functions
 def _hexToRGB(colourCode: str) -> tuple[int, int, int]:
     return tuple(int(colourCode[i : i + 2], base=16) for i in (0, 2, 4))
@@ -87,15 +89,12 @@ terminalTheme = TerminalTheme(
 )
 
 
-
 def copy_image_to_clipboard(image_path):
     try:
         subprocess.run(["xclip", "-selection", "clipboard", "-t", "image/png", "-i", image_path])
         print("Shellshot copied to clipboard.")
     except:
         print("Copying to clipboard failed, check if xclip is installed.")
-
-
 
 
 def main():
@@ -105,7 +104,7 @@ def main():
     # Parsing CLI
     parser = argparse.ArgumentParser(description='Shellshot Version 1.2 - Parse and export ANSI typescript to svg/png. (https://github.com/fullfox/shellshot)')
     parser.add_argument('typescript', help='Path to the ANSI typescript file')
-    parser.add_argument('offset', help='Number of command outputs to process from the end. Use !n to extract a single command. Use a:b to capture a specific range.')
+    parser.add_argument('offset', nargs='?', help='Number of command outputs to process from the end. Use !n to extract a single command. Use a:b to capture a specific range.')
     parser.add_argument('-o', '--output', help='Path for the output image (default: screenshot.png)', default='screenshot.png')
     parser.add_argument('-c', '--command', help='Command(s) matching stdout. Expected in `fc -lIn 0` format.')
     parser.add_argument('-t', '--title', help='Window title rendered in the screenshot (default: Terminal)',default='Terminal')
@@ -113,18 +112,47 @@ def main():
     parser.add_argument('-s', '--scale', type=int, help='Scale of rendered PNGs (default: 2)', default=2)
     parser.add_argument('--list', action='store_true', help='Print all the available outputs and exit')
     parser.add_argument('--print', action='store_true', help='Print the selected command(s) to console instead of rendering.')
-    parser.add_argument('--hex', action='store_true', help='With --list specified, print in hexadecimal (for debugging purpose)', default=False)
+    parser.add_argument('--hex', action='store_true', help='With --list or --print specified, print in hexadecimal (for debugging purpose)', default=False)
     parser.add_argument('--flagbypass', action='store_true', help='Ignore the \'donotcapture\' flag. (To capture shellshot itself)')
     parser.add_argument('--open', action='store_true', help='Open the screenshot once rendered')
-    parser.add_argument('--clipboard', action='store_true', help='Copy the screenshot to the clipboard using `xclip`', required=False)
+    parser.add_argument('--clipboard', action='store_true', help='Copy the screenshot to the clipboard using `xclip`', default=False)
     args = parser.parse_args()
 
-    # Parse range
+    if not args.flagbypass:
+        banned_sequence.append("\x1b]2;donotcapture\a")
+
+    # Open typescript
+    try:
+        with open(args.typescript, 'r', encoding='utf-8', errors='ignore', newline="") as file:
+            ANSIdata = file.read()
+    except FileNotFoundError:
+        print("Could not open file")
+        exit(1)
+
+    # Parse typescript outputs and commands input
+    stdouts = extract_cmd_outputs(ANSIdata)
+    stdins = ['']*len(stdouts) + args.command.split('\n')
+    stdins = stdins[-len(stdouts):]
+    
+    # List all stdin / stdout for debug purpose when --list
+    if args.list:
+        for i in range(len(stdouts)):
+            print(f"Input {i}: {stdins[i]}")
+            print(f"Output {i}:\n")
+            if args.hex:
+                sys.stdout.write(stdouts[i].encode().hex())
+            else:
+                indented = "\n".join(["    " + line for line in stdouts[i].splitlines()])
+                sys.stdout.write(indented)
+            print("")
+        exit(0)
+
+    # Extract specified range
     # syntaxes  !3 -> get the third last command/output
     #            3  -> get the three last commands/outputs
     #           3:1 -> get the third and the second last commands/outputs
     try:
-        if args.offset.startswith('!'):
+        if args.offset != None and args.offset.startswith('!'):
             extract_only_one = True
             start_offset = int(args.offset[1:])
         else:
@@ -140,28 +168,10 @@ def main():
         print("Invalid offset")
         exit(1)
 
-    if not args.flagbypass:
-        banned_sequence.append("\x1b]2;donotcapture\a")
-
-    # Open typescript
-    try:
-        with open(args.typescript, 'r', encoding='utf-8', errors='ignore', newline="") as file:
-            ANSIdata = file.read()
-    except FileNotFoundError:
-        print("Could not open file")
-        exit(1)
-
-
-    # Parse typescript
-    stdouts = extract_cmd_outputs(ANSIdata)
     if(start_offset > len(stdouts)):
         print("Command's output not found: Out of range for the given typescript.")
         exit(1)
 
-
-    # Extract command input and output:
-    stdins = ['']*len(stdouts) + args.command.split('\n')
-    stdins = stdins[-len(stdouts):]
     if extract_only_one:
         selected_stdins = stdins[-int(start_offset)]
         selected_stdouts = stdouts[-int(start_offset)]
@@ -174,25 +184,15 @@ def main():
             selected_stdouts = stdouts[-start_offset:-end_offset]
 
 
-    # List all stdin / stdout for debug purpose when --list
-    if args.list:
-        for i in range(len(stdouts)):
-            print(f"Input {i}: {stdins[i]}")
-            print(f"Output {i}:\n")
-            if args.hex:
-                sys.stdout.write(stdouts[i].encode().hex())
-            else:
-                indented = "\n".join(["    " + line for line in stdouts[i].splitlines()])
-                sys.stdout.write(indented)
-            print("")
-        exit(1)
-
     # Merge all ( prompts + stdins + stdouts ) into one final string
     ANSI_result = '\n'.join([ f"{PROMPT}{selected_stdins[i]}\n" + selected_stdouts[i] for i in range(len(selected_stdouts))])
 
     # Print the concat stdout for debug purpose
     if args.print:
-        sys.stdout.write(ANSI_result)
+        if args.hex:
+            sys.stdout.write(ANSI_result.encode().hex())
+        else:
+            sys.stdout.write(ANSI_result)
         sys.stdout.flush()
         exit(0)
 
