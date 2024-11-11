@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Editor</title>
+    <style>
+        .theme-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 11pt;
+            background-color: #282c34;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .color-input {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .color-input input {
+            width: 100px;
+            margin-right: 10px;
+        }
+        #theme-output {
+            width: 100%;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="theme-preview" id="themePreview">
+    <!-- Preview colors will be added here -->
+</div>
+
+<div id="colorInputs">
+    <!-- Color inputs will be generated here -->
+</div>
+
+<textarea id="theme-output" placeholder="Enter theme here">
+['282c34', 'abb2bf', '3f4451', '4f5666', 'e05561', 'ff616e', '8cc265', 'a5e075', 'd18f52', 'f0a45d', '4aa5f0', '4dc4ff', 'c162de', 'de73ff', '42b3c2', '4cd1e0', 'e6e6e6', 'ffffff']
+</textarea>
+<br>
+<button onclick="loadTheme()">Load Theme</button>
+<button onclick="copyTheme()">Copy Theme</button>
+
+<script>
+    let currentTheme = [];
+
+    // Function to generate color input fields
+    function generateColorInputs(theme) {
+        colorInputsContainer.innerHTML = ''; // Clear existing inputs
+        theme.forEach((color, index) => {
+            const colorDiv = document.createElement('div');
+            colorDiv.className = 'color-input';
+            colorDiv.innerHTML = `
+                <label for="color${index}">Color ${index}:</label>
+                <input type="color" id="color${index}" value="#${color}" onchange="updateTheme(${index})">
+            `;
+            colorInputsContainer.appendChild(colorDiv);
+        });
+        updatePreview(theme);
+        updateOutput(theme);
+    }
+
+    // Function to update the theme
+    function updateTheme(index) {
+        currentTheme[index] = document.getElementById(`color${index}`).value.slice(1);
+        updatePreview(currentTheme);
+        updateOutput(currentTheme);
+    }
+
+    // Function to update the preview
+    function updatePreview(theme) {
+        themePreview.style.backgroundColor = `#${theme[0]}`;
+        themePreview.innerHTML = '';
+        theme.slice(1).forEach(color => {
+            const span = document.createElement('span');
+            span.style.color = `#${color}`;
+            span.style.margin = '0 5px';
+            span.textContent = color;
+            themePreview.appendChild(span);
+        });
+    }
+
+    // Function to update the theme output
+    function updateOutput(theme) {
+        themeOutput.value = `['${theme.join("', '")}']`;
+    }
+
+    // Function to load the theme from the textarea
+    function loadTheme() {
+        try {
+            const themeText = themeOutput.value.replace(/['\[\]\s]/g, '');
+            const themeArray = themeText.split(',');
+            if (themeArray.length > 0) {
+                currentTheme = themeArray;
+                generateColorInputs(currentTheme);
+            } else {
+                alert('Invalid theme format!');
+            }
+        } catch (e) {
+            alert('Invalid theme format!');
+        }
+    }
+
+    // Function to copy the theme to the clipboard
+    function copyTheme() {
+        themeOutput.select();
+        document.execCommand('copy');
+        alert('Theme copied to clipboard!');
+    }
+
+    const colorInputsContainer = document.getElementById('colorInputs');
+    const themePreview = document.getElementById('themePreview');
+    const themeOutput = document.getElementById('theme-output');
+</script>
+
+</body>
+</html>

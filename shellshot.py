@@ -104,10 +104,11 @@ def main():
     # Parsing CLI
     parser = argparse.ArgumentParser(description='Shellshot Version 1.2 - Parse and export ANSI typescript to svg/png. (https://github.com/fullfox/shellshot)')
     parser.add_argument('typescript', help='Path to the ANSI typescript file')
-    parser.add_argument('offset', nargs='?', help='Number of command outputs to process from the end. Use !n to extract a single command. Use a:b to capture a specific range.')
+    parser.add_argument('offset', nargs='?', default="1", help='Number of command outputs to process from the end. Use .n to extract a single command. Use a:b to capture a specific range.')
     parser.add_argument('-o', '--output', help='Path for the output image (default: screenshot.png)', default='screenshot.png')
     parser.add_argument('-c', '--command', help='Command(s) matching stdout. Expected in `fc -lIn 0` format.')
     parser.add_argument('-t', '--title', help='Window title rendered in the screenshot (default: Terminal)',default='Terminal')
+    parser.add_argument('--head', type=int, help='Crop n lines from the top of the screenshot')
     parser.add_argument('--png', action='store_true', help='Render the screenshot in PNG instead of SVG')
     parser.add_argument('-s', '--scale', type=int, help='Scale of rendered PNGs (default: 2)', default=2)
     parser.add_argument('--list', action='store_true', help='Print all the available outputs and exit')
@@ -152,7 +153,7 @@ def main():
     #            3  -> get the three last commands/outputs
     #           3:1 -> get the third and the second last commands/outputs
     try:
-        if args.offset != None and args.offset.startswith('!'):
+        if args.offset != None and args.offset.startswith('.'):
             extract_only_one = True
             start_offset = int(args.offset[1:])
         else:
@@ -186,6 +187,8 @@ def main():
 
     # Merge all ( prompts + stdins + stdouts ) into one final string
     ANSI_result = '\n'.join([ f"{PROMPT}{selected_stdins[i]}\n" + selected_stdouts[i] for i in range(len(selected_stdouts))])
+    if args.head:
+        ANSI_result = '\n'.join(ANSI_result.splitlines()[:args.head])
 
     # Print the concat stdout for debug purpose
     if args.print:

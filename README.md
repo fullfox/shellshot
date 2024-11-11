@@ -54,7 +54,7 @@ Exit the terminal to stop recording outputs.
 `shellshot.py` offers many options to customize the prompt, the terminal window name, the range of commands to capture.
 
 ### Syntax
-Use `!n` to capture the output from the last nth command executed.
+Use `.n` to capture the output from the last nth command executed.
 
 Use `n` to capture the outputs from the last nth commands executed.
 
@@ -70,7 +70,7 @@ Shellshot Version 1.2 - Parse and export ANSI typescript to svg/png. (https://gi
 
 positional arguments:
   typescript            Path to the ANSI typescript file
-  offset                Number of command outputs to process from the end. Use !n to extract a single command. Use a:b to capture a specific range.
+  offset                Number of command outputs to process from the end. Use .n to extract a single command. Use a:b to capture a specific range.
 
 options:
   -h, --help            show this help message and exit
@@ -80,6 +80,7 @@ options:
                         Command(s) matching stdout. Expected in `fc -lIn 0` format.
   -t TITLE, --title TITLE
                         Window title rendered in the screenshot (default: Terminal)
+  --head HEAD           Crop n lines from the top of the screenshot
   --png                 Render the screenshot in PNG instead of SVG
   -s SCALE, --scale SCALE
                         Scale of rendered PNGs (default: 2)

@@ -44,7 +44,7 @@ if [[ -n $SHELLSHOT ]];then
     if [ $# -eq 0 ]; then
       local default=1
     else
-      local default=$@
+      local default=($@)
     fi
     shellshot.py "$SHELLSHOT" $default -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard
   }
