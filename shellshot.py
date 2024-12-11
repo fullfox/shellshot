@@ -106,7 +106,7 @@ def main():
     parser.add_argument('typescript', help='Path to the ANSI typescript file')
     parser.add_argument('offset', nargs='?', default="1", help='Number of command outputs to process from the end. Use .n to extract a single command. Use a:b to capture a specific range.')
     parser.add_argument('-o', '--output', help='Path for the output image (default: screenshot.png)', default='screenshot.png')
-    parser.add_argument('-c', '--command', help='Command(s) matching stdout. Expected in `fc -lIn 0` format.')
+    parser.add_argument('-c', '--command', help='Command(s) matching stdout. Expects `fc -lIn 0` format.')
     parser.add_argument('-t', '--title', help='Window title rendered in the screenshot (default: Terminal)',default='Terminal')
     parser.add_argument('--head', type=int, help='Crop n lines from the top of the screenshot')
     parser.add_argument('--png', action='store_true', help='Render the screenshot in PNG instead of SVG')
@@ -149,7 +149,7 @@ def main():
         exit(0)
 
     # Extract specified range
-    # syntaxes  !3 -> get the third last command/output
+    # syntaxes  .3 -> get the third last command/output
     #            3  -> get the three last commands/outputs
     #           3:1 -> get the third and the second last commands/outputs
     try:

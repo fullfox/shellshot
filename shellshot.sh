@@ -41,12 +41,7 @@ if [[ -n $SHELLSHOT ]];then
     local sanitize() { echo "${1:0:20}" | tr -dc '[:alnum:] -'; }
     local SANITIZED_FILENAME=$(sanitize "$(fc -lIn -1)")_$(date +%s) # to use the last ran command as filename
     #local SANITIZED_FILENAME="shellshot $(date +"%Y-%m-%d %Hh%Mm%S")" # to use date as filename
-    if [ $# -eq 0 ]; then
-      local default=1
-    else
-      local default=($@)
-    fi
-    shellshot.py "$SHELLSHOT" $default -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard
+    shellshot.py -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard "$SHELLSHOT" "$@"
   }
 
 fi
