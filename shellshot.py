@@ -104,7 +104,7 @@ def main():
     # Parsing CLI
     parser = argparse.ArgumentParser(description='Shellshot Version 1.2 - Parse and export ANSI typescript to svg/png. (https://github.com/fullfox/shellshot)')
     parser.add_argument('typescript', help='Path to the ANSI typescript file')
-    parser.add_argument('offset', nargs='?', default="1", help='Number of command outputs to process from the end. Use .n to extract a single command. Use a:b to capture a specific range.')
+    parser.add_argument('offset', nargs='?', default="1", help='Number of command outputs to process from the end. Use n to extract a single command. Use a..b to capture a specific range. Use raw to capture all without processing.')
     parser.add_argument('-o', '--output', help='Path for the output image (default: screenshot.png)', default='screenshot.png')
     parser.add_argument('-c', '--command', help='Command(s) matching stdout. Expects `fc -lIn 0` format.')
     parser.add_argument('-t', '--title', help='Window title rendered in the screenshot (default: Terminal)',default='Terminal')
@@ -130,10 +130,32 @@ def main():
         print("Could not open file")
         exit(1)
 
+    if args.offset != "raw":
+        ANSI_result = process_typescript(ANSIdata, args)
+    else:
+        ANSI_result = f"{PROMPT}{args.command}\n{ANSIdata}"
+
+    if args.head: # crop
+        ANSI_result = '\n'.join(ANSI_result.splitlines()[:args.head])
+
+    # Print the concat stdout for debug purpose
+    if args.print:
+        if args.hex:
+            sys.stdout.write(ANSI_result.encode().hex())
+        else:
+            sys.stdout.write(ANSI_result)
+        sys.stdout.flush()
+        exit(0)
+
+    save_image(ANSI_result, args)
+
+
+def process_typescript(ANSIdata, args):
     # Parse typescript outputs and commands input
     stdouts = extract_cmd_outputs(ANSIdata)
     stdins = ['']*len(stdouts) + args.command.split('\n')
     stdins = stdins[-len(stdouts):]
+    print(stdins)
     
     # List all stdin / stdout for debug purpose when --list
     if args.list:
@@ -148,23 +170,27 @@ def main():
             print("")
         exit(0)
 
-    # Extract specified range
-    # syntaxes  .3 -> get the third last command/output
-    #            3  -> get the three last commands/outputs
-    #           3:1 -> get the third and the second last commands/outputs
+
+    # Offset Syntaxes:
+    #   3       -> Get the third last command/output
+    #   3..     -> Get commands/outputs from the third last to the most recent
+    #   3..1    -> Get commands/outputs from the third last to the second last
     try:
-        if args.offset != None and args.offset.startswith('.'):
-            extract_only_one = True
-            start_offset = int(args.offset[1:])
-        else:
+        if ".." in args.offset:
+            offsets = args.offset.split("..")
+            start_offset = int(offsets[0]) if offsets[0] else None
+            end_offset = int(offsets[1]) if len(offsets) > 1 and offsets[1] else 0
+
+            # Validate the range
+            if start_offset is None or start_offset <= end_offset:
+                print("Invalid range: start_offset must be specified and greater than end_offset")
+                raise ValueError("Invalid range")
+
             extract_only_one = False
-            
-            if ':' in args.offset:
-                start_offset = int(args.offset.split(':')[0])
-                end_offset = int(args.offset.split(':')[1])
-            else:
-                start_offset = int(args.offset)
-                end_offset = 0
+        else:
+            start_offset = int(args.offset)
+            end_offset = 0
+            extract_only_one = True
     except:
         print("Invalid offset")
         exit(1)
@@ -174,32 +200,21 @@ def main():
         exit(1)
 
     if extract_only_one:
-        selected_stdins = stdins[-int(start_offset)]
-        selected_stdouts = stdouts[-int(start_offset)]
+        selected_stdins = [stdins[-start_offset]]
+        selected_stdouts = [stdouts[-start_offset]]
     else:
-        if end_offset == 0:
-            selected_stdins = stdins[-start_offset:]
-            selected_stdouts = stdouts[-start_offset:]
-        else:
-            selected_stdins = stdins[-start_offset:-end_offset]
-            selected_stdouts = stdouts[-start_offset:-end_offset]
+        selected_stdins = stdins[-start_offset:-end_offset] if end_offset else stdins[-start_offset:]
+        selected_stdouts = stdouts[-start_offset:-end_offset] if end_offset else stdouts[-start_offset:]
 
 
     # Merge all ( prompts + stdins + stdouts ) into one final string
     ANSI_result = '\n'.join([ f"{PROMPT}{selected_stdins[i]}\n" + selected_stdouts[i] for i in range(len(selected_stdouts))])
-    if args.head:
-        ANSI_result = '\n'.join(ANSI_result.splitlines()[:args.head])
+    return ANSI_result
 
-    # Print the concat stdout for debug purpose
-    if args.print:
-        if args.hex:
-            sys.stdout.write(ANSI_result.encode().hex())
-        else:
-            sys.stdout.write(ANSI_result)
-        sys.stdout.flush()
-        exit(0)
 
-    # Export to image
+
+# args = { png: true, output: "out", open: true, clipboard: true }
+def save_image(ANSI_result, args): # Export to image
     output_svg = ANSI_to_svg(ANSI_result, args.title)
     svg_fallback = False
     output_file = None
