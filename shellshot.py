@@ -155,7 +155,6 @@ def process_typescript(ANSIdata, args):
     stdouts = extract_cmd_outputs(ANSIdata)
     stdins = ['']*len(stdouts) + args.command.split('\n')
     stdins = stdins[-len(stdouts):]
-    print(stdins)
     
     # List all stdin / stdout for debug purpose when --list
     if args.list:
