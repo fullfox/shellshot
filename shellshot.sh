@@ -1,15 +1,11 @@
-add_prefix() {
-    echo -en "\033]prefix\007"
+# Fileshot
+fileshot() {
+  local filename="$1"
+  shift
+  batcat --color=always --style=plain "$filename" --theme="Visual Studio Dark+" | pipeshot.py -t "$filename" "$@"
 }
 
-add_suffix() {
-    echo -en "\033]suffix\007"
-}
-
-autoload -Uz add-zsh-hook
-add-zsh-hook preexec add_prefix
-add-zsh-hook precmd add_suffix
-
+# Shellshot
 record(){
   if [[ -z $SHELLSHOT ]];then
     dir="$HOME/.shellshot"
@@ -33,15 +29,20 @@ if [[ -n $SHELLSHOT ]];then
   }
 
   # Path to save .svg and .png shellshots at:
-  : ${SHELLSHOT_EXPORT_DIR:="$(xdg-user-dir PICTURES)/shellshot"} # Define SHELLSHOT_EXPORT_DIR as env var to override
+  : ${SHELLSHOT_EXPORT_DIR:="$(xdg-user-dir PICTURES)/shellshot"}
   mkdir -p $SHELLSHOT_EXPORT_DIR
 
   shot(){
-    CMDS=$(fc -lIn 0)
-    local sanitize() { echo "${1:0:20}" | tr -dc '[:alnum:] -'; }
-    local SANITIZED_FILENAME=$(sanitize "$(fc -lIn -1)")_$(date +%s) # to use the last ran command as filename
-    #local SANITIZED_FILENAME="shellshot $(date +"%Y-%m-%d %Hh%Mm%S")" # to use date as filename
-    shellshot.py -c "$CMDS" -o "$SHELLSHOT_EXPORT_DIR/$SANITIZED_FILENAME" --png --open --clipboard "$SHELLSHOT" "$@"
+    local sanitize() { echo "${1:0:40}" | tr -dc '[:alnum:] -'; }
+    local BASE_FILENAME=$(sanitize "$(fc -lIn -1)") # to use the last ran command as filename
+    #local BASE_FILENAME="shellshot_$(date +"%Y-%m-%d %Hh%Mm%S")" # to use date as filename
+    local FILENAME="$BASE_FILENAME"
+    local i=1
+    while [[ -e "$SHELLSHOT_EXPORT_DIR/$FILENAME.png" || -e "$SHELLSHOT_EXPORT_DIR/$FILENAME.svg" ]]; do
+      FILENAME="${BASE_FILENAME}_$i"
+      ((i++))
+    done
+    shellshot.py -o "$SHELLSHOT_EXPORT_DIR/$FILENAME" --open --clipboard "$SHELLSHOT" "$@"
   }
 
 fi

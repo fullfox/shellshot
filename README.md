@@ -1,43 +1,30 @@
 # 📷 ShellShot
 
-Generate **screenshots** of **commands output**, purely from **commandline** (only available on zsh for now).
-
-**Shellshot** is a tool made out of two scripts:
-- `shellshot.sh`, a wrapper for `shellshot.py` which capture terminal output using the [linux *`script`* command](https://man7.org/linux/man-pages/man1/script.1.html).
-- `shellshot.py`, a parser for *`script`* outputs which extract the nth output and render it to SVG or PNG.
+Take **screenshots** of the **terminal**, from the **terminal**.
 
 ## How to install
-### Requirements
 
-Install the requirements first with:
+1. Install the requirements first with:
 ```
-sudo apt install librsvg2-bin xclip uuid-runtime
+sudo apt install librsvg2-bin xclip uuid-runtime bat
 ```
-
-### Installation
-1. Clone repo, make `shellshot.py` reachable from the $PATH and make it executable
-```bash
-git clone git@github.com:fullfox/shellshot.git
-cd shellshot
-chmod +x shellshot.py
-sudo ln -s "$(pwd)/shellshot.py" /usr/local/bin/shellshot.py
+2. Put `shellshot.py` in the $PATH and make it executable.
+3. Append this at the end of your `~/.zshrc` config file
 ```
-
-2. Append this to **the last line** of your `~/.zshrc` config file
-```
+source /path/to/shell-integration.zsh
 source /path/to/shellshot.sh
 ```
 
-That's it.
+## How to use:
+While in terminal, run the command of your choice, then run `shot`. That's it.
 
-## How to use
-While in terminal, run the command of your choice, then run `shot`.
+**Example:**
 
 ```bash
 $ echo -e "\033[1m\033[31mRED \033[32mGREEN \033[34mBLUE"
 RED GREEN BLUE
 $ shot
-Shellshot saved at ~/Pictures/shellshot/echo_1711711985.png
+Shellshot saved at ~/Pictures/shellshot/echo.png
 Shellshot copied to clipboard.
 ```
 
@@ -45,51 +32,47 @@ The rendered png:
 
 ![shellshot 2024-01-27 14:00:12](https://github.com/fullfox/shellshot/assets/31577231/982d125e-9e01-4755-a7ed-4835322aec78)
 
-The screenshot of the previous command output is saved in `~/Pictures/shellshot/` (set $SHELLSHOT_EXPORT_DIR to specify another directory).
+**Syntax:**
+- `shot` captures the last command
+- `shot N..` captures the last N commands (range)
+- `shot N` captures the Nth command back in history
 
-### Disable automatic recording
-If you want to disable automatic outputs recording for security purpose, you can do so by commenting the last line in `shellshot.sh`. Type `record` to temporary enable it again.
-Exit the terminal to stop recording outputs.
+By default, screenshots are saved in `~/Pictures/shellshot/`. Set the env var $SHELLSHOT_EXPORT_DIR to specify another directory.
 
-`shellshot.py` offers many options to customize the prompt, the terminal window name, the range of commands to capture.
+The generated screenshots can be configured. Check `shellshot.py --help` for more infos.
 
-### Syntax
-Use `.n` to capture the output from the last nth command executed.
+## How it works ?
 
-Use `n` to capture the outputs from the last nth commands executed.
+Three scripts are used:
+- `shell-integration.zsh`, a custom OSC 133 compatible shell integration
+- `shellshot.sh`, which captures terminal input/output using [ `script`](https://man7.org/linux/man-pages/man1/script.1.html) and exposes a command `shot` feeding `shellshot.py`.
+- And `shellshot.py`, a parser for the generated typescripts, extracting command's inputs/outputs and rendering it to SVG or PNG.
 
-Use `n:m` to capture the output(s) from the last nth to mth command(s) executed.
 
-Explore these options with the `--help` flag.
+`shellshot.sh` saves all your terminal session inputs/outputs in a file under `~/.shellshot`. This file is deleted when you exit the terminal.
 
-```
-$ shellshot.py -h
-usage: shellshot.py [-h] [-o OUTPUT] [-c COMMAND] [-t TITLE] [--png] [-s SCALE] [--list] [--print] [--hex] [--flagbypass] [--open] [--clipboard] typescript offset
+If you want to disable automatic recording of your terminal for security purpose, you can do so by commenting the last line in `shellshot.sh`. Type `record` to temporary enable it again, and `exit` to stop and delete the recording.
 
-Shellshot Version 1.2 - Parse and export ANSI typescript to svg/png. (https://github.com/fullfox/shellshot)
+## Scripting with `pipeshot.py`
 
-positional arguments:
-  typescript            Path to the ANSI typescript file
-  offset                Number of command outputs to process from the end. Use .n to extract a single command. Use a:b to capture a specific range.
-
-options:
-  -h, --help            show this help message and exit
-  -o OUTPUT, --output OUTPUT
-                        Path for the output image (default: screenshot.png)
-  -c COMMAND, --command COMMAND
-                        Command(s) matching stdout. Expected in `fc -lIn 0` format.
-  -t TITLE, --title TITLE
-                        Window title rendered in the screenshot (default: Terminal)
-  --head HEAD           Crop n lines from the top of the screenshot
-  --png                 Render the screenshot in PNG instead of SVG
-  -s SCALE, --scale SCALE
-                        Scale of rendered PNGs (default: 2)
-  --list                Print all the available outputs and exit
-  --print               Print the selected command(s) to console instead of rendering.
-  --hex                 With --list specified, print in hexadecimal (for debugging purpose)
-  --flagbypass          Ignore the 'donotcapture' flag. (To capture shellshot itself)
-  --open                Open the screenshot once rendered
-  --clipboard           Copy the screenshot to the clipboard using `xclip`
+For usage in scripts, `pipeshot.py` can be used as follows:
+```bash
+cat myfile | pipeshot.py
 ```
 
-If you find any bug, please create an issue.
+If you want to keep stdout visible for interactivity, use:
+```bash
+nmap 127.1 2>&1 | tee >(pipeshot.py)
+```
+
+(`2>&1` to capture stderr as well)
+
+Check `pipeshot.py --help` for more infos.
+
+## Screenshot files with `fileshot`
+
+To display the content of a file with syntax highlighting, use:
+```
+fileshot myscript.py
+```
+It's a `pipeshot.py` wrapper, meaning you can use the same args.
