@@ -11,7 +11,7 @@ record(){
     dir="$HOME/.shellshot"
     mkdir -p $dir
     file="$dir/$(uuidgen)"
-    SHELLSHOT=$file exec script -qf $file
+    SHELLSHOT=$file exec script -qf $file -c zsh
   fi
 }
 
