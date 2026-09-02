@@ -1,6 +1,16 @@
 # Slightly modified version of
 # https://gitlab.freedesktop.org/Per_Bothner/specifications/-/blob/master/proposals/prompts-data/shell-integration.zsh
 
+urlencode() {
+  local LC_ALL=C s="$1" out="" i c
+  for (( i=1; i<=${#s}; i++ )); do
+    c="${s[i]}"
+    [[ $c == [A-Za-z0-9._~-] ]] || printf -v c '%%%02X' "'$c"
+    out+="$c"
+  done
+  print -r -- "$out"
+}
+
 _prompt_executing=""
 function __prompt_precmd() {
     local ret="$?"
@@ -21,7 +31,7 @@ function __prompt_precmd() {
 function __prompt_preexec() {
     PS1="$_PROMPT_SAVE_PS1"
     PS2="$_PROMPT_SAVE_PS2"
-    printf "\033]133;C;%s\007" "$1"
+    printf "\033]133;C;cmd=%s\007" "$(urlencode "$1")"
     _prompt_executing=1
 }
 preexec_functions+=(__prompt_preexec)

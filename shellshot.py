@@ -11,7 +11,17 @@ PROMPT = "\033[1m\033[95mconsultant$ \033[0m"
 
 # Console theme
 theme = ['282c34', 'abb2bf', '3f4451', '4f5666', 'e05561', 'ff616e', '8cc265', 'a5e075', 'd18f52', 'f0a45d', '4aa5f0', '4dc4ff', 'c162de', 'de73ff', '42b3c2', '4cd1e0', 'e6e6e6', 'ffffff']
-MAX_WIDTH = 200
+MAX_WIDTH = 130
+
+
+def _decode_c_payload(payload):
+    # New form: key=value options, command percent-encoded in cmd=.
+    # Old form: raw command -> fallback.
+    if "cmd=" in payload:
+        for opt in payload.split(";"):
+            if opt.startswith("cmd="):
+                return urllib.parse.unquote(opt[4:])
+    return payload
 
 
 def extract_commands_osc133(input_data):
@@ -24,7 +34,8 @@ def extract_commands_osc133(input_data):
     - C: Command execution start (contains the actual command!)
     - D: Command finished (with exit code and aid)
     
-    The command is embedded in OSC 133;C;command
+    The command is embedded in OSC 133;C;cmd=<percent-encoded command>
+    (older typescripts carry the raw command instead)
     Between C and D: command output
     """
     commands = []
@@ -36,6 +47,7 @@ def extract_commands_osc133(input_data):
     matches = re.findall(pattern, input_data, flags=re.DOTALL)
     
     for cmd, output in matches:
+        cmd = _decode_c_payload(cmd)
         # Clean the output
         output_clean = ANSI_clean(output)
         
