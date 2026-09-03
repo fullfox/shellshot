@@ -32,8 +32,11 @@ if [[ -n $SHELLSHOT ]];then
     exit
   }
 
-  # Path to save .svg and .png shellshots at:
+  # Don't edit these defaults, override them in your .zshrc before sourcing this file:
+  #   SHELLSHOT_EXPORT_DIR=~/screenshots   # where .png/.svg are saved
+  #   SHELLSHOT_ARGS=()                     # flags passed to shellshot.py (default: --open --clipboard)
   : ${SHELLSHOT_EXPORT_DIR:="$(xdg-user-dir PICTURES)/shellshot"}
+  (( ${+SHELLSHOT_ARGS} )) || SHELLSHOT_ARGS=(--open --clipboard)
   mkdir -p $SHELLSHOT_EXPORT_DIR
 
   shot(){
@@ -46,7 +49,7 @@ if [[ -n $SHELLSHOT ]];then
       FILENAME="${BASE_FILENAME}_$i"
       ((i++))
     done
-    shellshot.py -o "$SHELLSHOT_EXPORT_DIR/$FILENAME" --open --clipboard "$SHELLSHOT" "$@"
+    shellshot.py -o "$SHELLSHOT_EXPORT_DIR/$FILENAME" "${SHELLSHOT_ARGS[@]}" "$SHELLSHOT" "$@"
   }
 
 fi
