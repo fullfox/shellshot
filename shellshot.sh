@@ -8,9 +8,7 @@ fileshot() {
 # Shellshot
 record(){
   if [[ -z $SHELLSHOT ]];then
-    dir="$HOME/.shellshot"
-    mkdir -p $dir
-    file="$dir/$(uuidgen)"
+    local file=$(mktemp -t shellshot.XXXXXXXX)
     SHELLSHOT=$file exec script -qf $file -c zsh
   fi
 }
@@ -25,7 +23,13 @@ if [[ -n $SHELLSHOT ]];then
   echo "recording..."
 
   zshexit(){
-    rm $SHELLSHOT
+    rm -f $SHELLSHOT
+  }
+  # Interactive zsh ignores SIGTERM, so on shutdown/logout `script` would end up
+  # SIGKILLing us and the transcript would be left behind. Delete it ourselves.
+  TRAPTERM(){
+    rm -f $SHELLSHOT
+    exit
   }
 
   # Path to save .svg and .png shellshots at:

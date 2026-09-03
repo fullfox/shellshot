@@ -6,7 +6,7 @@ Take **screenshots** of the **terminal**, from the **terminal**.
 
 1. Install the requirements first with:
 ```
-sudo apt install librsvg2-bin xclip uuid-runtime bat
+sudo apt install librsvg2-bin xclip bat
 ```
 2. Put `shellshot.py` in the $PATH and make it executable.
 3. Append this at the end of your `~/.zshrc` config file
@@ -49,7 +49,7 @@ Three scripts are used:
 - And `shellshot.py`, a parser for the generated typescripts, extracting command's inputs/outputs and rendering it to SVG or PNG.
 
 
-`shellshot.sh` saves all your terminal session inputs/outputs in a file under `~/.shellshot`. This file is deleted when you exit the terminal.
+`shellshot.sh` saves all your terminal session inputs/outputs in a private file under `/tmp`. This file is deleted when the terminal exits or is terminated (shutdown, logout).
 
 If you want to disable automatic recording of your terminal for security purpose, you can do so by commenting the last line in `shellshot.sh`. Type `record` to temporary enable it again, and `exit` to stop and delete the recording.
 
