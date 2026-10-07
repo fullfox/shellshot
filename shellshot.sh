@@ -54,4 +54,4 @@ if [[ -n $SHELLSHOT ]];then
 
 fi
 
-record # comment this line to disable automatic recording
+# record # comment this line to disable automatic recording

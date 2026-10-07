@@ -72,9 +72,9 @@ def ANSI_clean(input_data):
     # Remove OSC sequences
     result = re.sub(r'(\x9d|\x1b)(?!\[)(.)(?:.*?)(\x07|\x9c|\x1b\\)', '', result)
     # Remove ZSH ending '%'
-    result = result.replace("\x1B[1m\x1B[7m%\x1B[27m\x1B[1m\x1B[0m", '')
+    result = result.split("\x1B[1m\x1B[7m%\x1B[27m\x1B[1m\x1B[0m", 1)[0]
     # Normalize line endings and handle carriage returns
-    result = result.replace("\r\n", "\n")
+    result = re.sub(r'\r+\n', '\n', result)
     result = '\n'.join(line.split('\r')[-1].rstrip() for line in result.split('\n'))
     # Remove trailing newline (if any)
     return result.rstrip('\n')
